@@ -2,12 +2,20 @@
 import json
 import os
 
+
 class Configuration:
     """Configuration class"""
     __configuration = None
 
     def __init__(self, path, name):
-        """Constructor"""
+        """
+        Constructor
+        :type self: packages.configuration.Configuration
+        :type path: str
+        :type name: str
+        :raise RuntimeError
+        :return void
+        """
         filename = os.path.join(path, name+'.json')
         if os.path.isfile(filename):
             config = open(filename, 'rb').read()
@@ -19,12 +27,17 @@ class Configuration:
             raise RuntimeError("Can not decode JSON files")
 
     def get(self, key):
-        """Method Get"""
-        splitKey = key.split('::')
-        tempValue = self.__configuration
-        for oneKey in splitKey:
+        """
+        Get configuration parameter by key separated with ::
+        :type self: packages.configuration.Configuration
+        :type key: str
+        :return mixed
+        """
+        split_key = key.split('::')
+        temp_value = self.__configuration
+        for one_key in split_key:
             try:
-                tempValue = tempValue[oneKey]
+                temp_value = temp_value[one_key]
             except KeyError:
                 return None
-        return tempValue
+        return temp_value
