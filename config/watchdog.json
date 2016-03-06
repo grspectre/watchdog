@@ -1,0 +1,18 @@
+{
+  "server": {
+    "host": "localhost",
+    "port": 20113
+  },
+  "console": {
+    "host": "localhost",
+    "port": 20113
+  },
+  "paths": [
+    {
+      "path": "/home/ant/!data",
+      "wildcards": [
+        "*.php"
+      ]
+    }
+  ]
+}
