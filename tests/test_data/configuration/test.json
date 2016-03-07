@@ -1,0 +1,11 @@
+{
+  "first": "key",
+  "second": [
+    {
+      "sub1": "value1"
+    },
+    {
+      "sub2": "value2"
+    }
+  ]
+}
