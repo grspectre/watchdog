@@ -1,15 +1,18 @@
 # -*- coding: utf8 -*-
-
+from types import *
+import fnmatch
 
 class Wildcard:
     """Wildcard class"""
     __wildcards = []
 
-    def __init__(self):
+    def __init__(self, wildcards):
         """
         Constructor
+        :type self: packages.wildcard.Wildcard
+        :type wildcards: list
         """
-        pass
+        self.set(wildcards)
 
     def add(self, wildcard):
         """
@@ -19,7 +22,9 @@ class Wildcard:
         :return: void
         :raise RuntimeError
         """
-        pass
+        if type(wildcard) is not StringType:
+            raise RuntimeError('Wildcard is not a string')
+        self.__wildcards.append(wildcard)
 
     def set(self, wildcards):
         """
@@ -29,7 +34,11 @@ class Wildcard:
         :return: void
         :raise: RuntimeError
         """
-        pass
+        if type(wildcards) is not ListType:
+            raise RuntimeError('Wildcards is not a list')
+        for wildcard in wildcards:
+            if type(wildcard) is not StringType:
+                raise RuntimeError('Wildcard is not a string')
 
     def clear(self):
         """
@@ -46,7 +55,9 @@ class Wildcard:
         :param checking_string:
         :return:
         """
-        pass
-
-    def __prepare(self, wildcard):
-        pass
+        if len(self.__wildcards) == 0:
+            return False
+        for wildcard in self.__wildcards:
+            if fnmatch.fnmatchcase(checking_string, wildcard):
+                return True
+        return False
