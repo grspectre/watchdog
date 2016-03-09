@@ -1,16 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf8 -*-
 
-from multiprocessing import Queue, Process
-import os
-
 
 def init():
     """
-    Init watchdog server
+    Init watchdog console
     :return:
     """
     pass
 
-if __name__=="__main__":
+if __name__=='__main__':
     init()
