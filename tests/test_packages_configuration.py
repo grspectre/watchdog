@@ -20,5 +20,9 @@ class ConfigurationTest(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             Configuration(self.configuration_path, 'test_empty')
 
+    def test_get_config_value(self):
+        self.assertEqual(self.test_config.get('wrong_key'), None)
+        self.assertEqual(self.test_config.get("first"), 'key')
+
 if __name__=="__main__":
     unittest.main()
