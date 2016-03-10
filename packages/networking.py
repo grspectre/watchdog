@@ -10,14 +10,35 @@ import time
 
 
 class WatchdogThreadingSocketServer(SocketServer.ThreadingTCPServer):
-    __queue = None
-    data_from_request = {}
+    __in_queue = None
+    __out_queue = None
+    queued_data = {}
 
     def set_in_queue(self, queue):
-        self.__queue = queue
+        self.__in_queue = queue
+
+    def set_out_queue(self, queue):
+        self.__out_queue = queue
+
+    def handle_queue(self):
+        for unique_id in self.queued_data:
+            item = self.queued_data[unique_id]
+            if item["type"] == "out" and item["data"] is not None:
+                self.__out_queue.put({
+                    "id": unique_id,
+                    "data": item["data"]
+                })
+                self.queued_data[unique_id]["type"] = "in"
+                self.queued_data[unique_id]["data"] = None
+
+        while not self.__in_queue.empty():
+            item = self.__in_queue.get()
+            if item["id"] in self.queued_data:
+                self.queued_data[item["id"]]["data"] = item["data"]
 
     def process_request(self, request, client_address):
         """Start a new thread to process the request."""
+        self.handle_queue()
         t = threading.Thread(target = self.process_request_thread,
                              args = (request, client_address))
         t.daemon = self.daemon_threads
@@ -32,18 +53,21 @@ class WatchdogTCPRequestHandler(SocketServer.BaseRequestHandler):
         unique_str = str(time.time())+str(random.random())
         md5_hash = hashlib.md5(unique_str)
         self.__unique_id = md5_hash.hexdigits()
-        self.server.data_from_request[self.__unique_id] = {
-            "data_from_request_sended": False,
-            "data_from_request": None,
-            "data_from_worker_received": False,
-            "data_from_worker": None
+        self.server.queued_data[self.__unique_id] = {
+            "type": "out",
+            "data": None
         }
 
     def handle(self):
-        print self.server.get_queue()
-        data = self.request.recv(1024)
-        cur_thread = threading.current_thread()
-        response = "{}: {}".format(cur_thread.name, data)
+        data = self.request.recv(65535)
+        self.server.queued_data[self.__unique_id]["data"] = data
+        check_data = True
+        while check_data:
+            time.sleep(0.5)
+            item = self.server.queued_data[self.__unique_id]
+            if item["type"] == "in" and item["data"] is not None:
+                check_data = False
+                response = item["data"]
         self.request.sendall(response)
 
     def finish(self):
