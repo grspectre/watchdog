@@ -19,7 +19,7 @@ def init_server(configuration, queue):
     server.set_queue(queue)
     server.serve_forever()
 
-def init_worker(server_queue, ):
+def init_worker(server_queue, worker_queue):
     """
     :param queue:
     :return:
