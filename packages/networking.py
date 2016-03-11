@@ -9,40 +9,26 @@ import hashlib
 import time
 
 
-class WatchdogThreadingSocketServer(SocketServer.ThreadingTCPServer):
-    __in_queue = None
-    __out_queue = None
-    queued_data = {}
-
-    def set_in_queue(self, queue):
-        self.__in_queue = queue
-
-    def set_out_queue(self, queue):
-        self.__out_queue = queue
-
-    def handle_queue(self):
-        for unique_id in self.queued_data:
-            item = self.queued_data[unique_id]
+def handle_queue(server, in_queue, out_queue):
+    while True:
+        for unique_id in server.queued_data:
+            item = server.queued_data[unique_id]
             if item["type"] == "out" and item["data"] is not None:
-                self.__out_queue.put({
+                out_queue.put({
                     "id": unique_id,
                     "data": item["data"]
                 })
-                self.queued_data[unique_id]["type"] = "in"
-                self.queued_data[unique_id]["data"] = None
+                server.queued_data[unique_id]["type"] = "in"
+                server.queued_data[unique_id]["data"] = None
 
-        while not self.__in_queue.empty():
-            item = self.__in_queue.get()
-            if item["id"] in self.queued_data:
-                self.queued_data[item["id"]]["data"] = item["data"]
+        while not in_queue.empty():
+            item = in_queue.get()
+            if item["id"] in server.queued_data:
+                server.queued_data[item["id"]]["data"] = item["data"]
 
-    def process_request(self, request, client_address):
-        """Start a new thread to process the request."""
-        self.handle_queue()
-        t = threading.Thread(target = self.process_request_thread,
-                             args = (request, client_address))
-        t.daemon = self.daemon_threads
-        t.start()
+
+class WatchdogThreadingSocketServer(SocketServer.ThreadingTCPServer):
+    queued_data = {}
 
 
 class WatchdogTCPRequestHandler(SocketServer.BaseRequestHandler):
@@ -52,18 +38,20 @@ class WatchdogTCPRequestHandler(SocketServer.BaseRequestHandler):
     def setup(self):
         unique_str = str(time.time())+str(random.random())
         md5_hash = hashlib.md5(unique_str)
-        self.__unique_id = md5_hash.hexdigits()
+        self.__unique_id = md5_hash.hexdigest()
         self.server.queued_data[self.__unique_id] = {
             "type": "out",
             "data": None
         }
 
     def handle(self):
+        # TODO: Magic number!
         data = self.request.recv(65535)
         self.server.queued_data[self.__unique_id]["data"] = data
         check_data = True
+        # TODO: Magic number!
         while check_data:
-            time.sleep(0.5)
+            time.sleep(0.1)
             item = self.server.queued_data[self.__unique_id]
             if item["type"] == "in" and item["data"] is not None:
                 check_data = False
@@ -71,7 +59,7 @@ class WatchdogTCPRequestHandler(SocketServer.BaseRequestHandler):
         self.request.sendall(response)
 
     def finish(self):
-        del(self.server.data_from_request[self.__unique_id])
+        del(self.server.queued_data[self.__unique_id])
 
 
 class WatchdogTCPClient:
