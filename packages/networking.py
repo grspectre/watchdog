@@ -11,6 +11,7 @@ import time
 
 def handle_queue(server, in_queue, out_queue):
     while True:
+        time.sleep(0.1)
         for unique_id in server.queued_data:
             item = server.queued_data[unique_id]
             if item["type"] == "out" and item["data"] is not None:
