@@ -37,6 +37,7 @@ def serve(configuration, in_server_queue, out_server_queue):
         while not in_server_queue.empty():
             data = in_server_queue.get()
             out_server_queue.put(data)
+        # TODO: Magic number!
         time.sleep(0.1)
 
 
