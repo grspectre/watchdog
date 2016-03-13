@@ -4,22 +4,24 @@
 from multiprocessing import Queue, Process
 from packages.configuration import Configuration
 from packages.networking import WatchdogTCPRequestHandler, WatchdogThreadingSocketServer, handle_queue
+from packages.queue_pool import QueuePool
 import os
 import threading
 import time
 
 
-def init_server(configuration, in_queue, out_queue):
+def init_server(configuration, queue_pool):
     """
     Initiate a socket server
     :type configuration: packages.configuration.Configuration
+    :type queue_pool: packages.queue_pool.QueuePool
     :return:
     """
     host = configuration.get("server::host")
     port = configuration.get("server::port")
     server = WatchdogThreadingSocketServer((host, port), WatchdogTCPRequestHandler)
     handle_queue_thread = threading.Thread(target = handle_queue,
-                         args = (server, out_queue, in_queue))
+                         args = (server, queue_pool))
     handle_queue_thread.start()
     server.serve_forever()
 
@@ -32,11 +34,11 @@ def init_worker(server_queue, worker_queue):
         pass
 
 
-def serve(configuration, in_server_queue, out_server_queue):
+def serve(configuration, queue_pool):
     while True:
-        while not in_server_queue.empty():
-            data = in_server_queue.get()
-            out_server_queue.put(data)
+        items = queue_pool.getAll('parent')
+        for item in items:
+            queue_pool.put('parent', item)
         # TODO: Magic number!
         time.sleep(0.1)
 
@@ -51,9 +53,10 @@ def init():
     configuration = Configuration(configuration_path, configuration_name)
     in_server_queue = Queue()
     out_server_queue = Queue()
-    server_process = Process(target=init_server, args=(configuration, in_server_queue, out_server_queue))
+    srv_queue_pool = QueuePool(in_server_queue, out_server_queue)
+    server_process = Process(target=init_server, args=(configuration, srv_queue_pool))
     server_process.start()
-    serve(configuration, in_server_queue, out_server_queue)
+    serve(configuration, srv_queue_pool)
 
 
 

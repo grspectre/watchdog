@@ -9,25 +9,25 @@ import hashlib
 import time
 
 
-def handle_queue(server, in_queue, out_queue):
+def handle_queue(server, queue_pool):
     while True:
-        # TODO: Magic number!
-        time.sleep(0.1)
         for unique_id in server.queued_data:
             item = server.queued_data[unique_id]
             if item["type"] == "out" and item["data"] is not None:
-                out_queue.put({
+                queue_pool.put('child', {
                     "id": unique_id,
                     "data": item["data"]
                 })
                 server.queued_data[unique_id]["type"] = "in"
                 server.queued_data[unique_id]["data"] = None
 
-        while not in_queue.empty():
-            item = in_queue.get()
+        items = queue_pool.getAll('child')
+        for item in items:
             if item["id"] in server.queued_data:
                 server.queued_data[item["id"]]["data"] = item["data"]
 
+        # TODO: Magic number!
+        time.sleep(0.1)
 
 class WatchdogThreadingSocketServer(SocketServer.ThreadingTCPServer):
     queued_data = {}
