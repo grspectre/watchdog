@@ -55,10 +55,10 @@ class QueuePool:
     def getAll(self, who_am_i):
         """
         Get all values from Queue
-        :param who_am_i:
-        :return:
+        :type who_am_i: str
+        :return: list
         """
-        self.__check('who_am_i', $who_am_i)
+        self.__check('who_am_i', who_am_i)
         result = []
         if who_am_i == 'parent':
             while not self.__in_queue.empty():
