@@ -5,7 +5,7 @@ class BidirectionalQueue:
     __in_queue = None
     __out_queue = None
 
-    def __init__(self, in_queue, out_queue, who_create = 'parent'):
+    def __init__(self, in_queue, out_queue, who_create='parent'):
         """
         Constuctor
         :type in_queue: multiprocessing.Queue
@@ -52,7 +52,7 @@ class BidirectionalQueue:
             else:
                 return None
 
-    def getAll(self, who_am_i):
+    def get_all(self, who_am_i):
         """
         Get all values from Queue
         :type who_am_i: str

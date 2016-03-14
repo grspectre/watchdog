@@ -34,11 +34,14 @@ class Wildcard:
         :return: void
         :raise: RuntimeError
         """
+        cleared_wildcards = []
         if type(wildcards) is not ListType:
             raise RuntimeError('Wildcards is not a list')
         for wildcard in wildcards:
             if type(wildcard) is not StringType:
                 raise RuntimeError('Wildcard is not a string')
+            cleared_wildcards.append(wildcard)
+        self.__wildcards = cleared_wildcards
 
     def clear(self):
         """

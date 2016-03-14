@@ -10,7 +10,7 @@ import threading
 import time
 
 
-def init_server(configuration, queue_pool):
+def init_server(configuration, bi_queue):
     """
     Initiate a socket server
     :type configuration: packages.configuration.Configuration
@@ -20,14 +20,15 @@ def init_server(configuration, queue_pool):
     host = configuration.get("server::host")
     port = configuration.get("server::port")
     server = WatchdogThreadingSocketServer((host, port), WatchdogTCPRequestHandler)
-    handle_queue_thread = threading.Thread(target = handle_queue,
-                         args = (server, queue_pool))
+    handle_queue_thread = threading.Thread(target=handle_queue, args=(server, bi_queue))
     handle_queue_thread.start()
     server.serve_forever()
 
-def init_worker(server_queue, worker_queue):
+
+def init_worker(configuration_path, bi_queue):
     """
-    :param queue:
+    :type configuration_path: str
+    :type bi_queue: packages.bidirectional_queue.BidirectionalQueue
     :return:
     """
     while True:
@@ -36,7 +37,7 @@ def init_worker(server_queue, worker_queue):
 
 def serve(configuration, bi_queue):
     while True:
-        items = bi_queue.getAll('parent')
+        items = bi_queue.get_all('parent')
         for item in items:
             bi_queue.put('parent', item)
         # TODO: Magic number!
@@ -57,6 +58,5 @@ def init():
     serve(configuration, srv_bi_queue)
 
 
-
-if __name__=="__main__":
+if __name__ == "__main__":
     init()
