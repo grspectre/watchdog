@@ -5,6 +5,7 @@ from multiprocessing import Queue, Process
 from packages.configuration import Configuration
 from packages.networking import WatchdogTCPRequestHandler, WatchdogThreadingSocketServer, handle_queue
 from packages.bidirectional_queue import BidirectionalQueue
+from packages.tools import CheckInterval
 import os
 import threading
 import time
@@ -36,10 +37,16 @@ def init_worker(configuration_path, bi_queue):
 
 
 def serve(configuration, bi_queue):
+    check_interval = CheckInterval()
+    check_interval.add_interval(15)
+    check_interval.add_interval(30)
     while True:
         items = bi_queue.get_all('parent')
         for item in items:
             bi_queue.put('parent', item)
+        current_intervals = check_interval.fire()
+        if len(current_intervals) > 0:
+            print current_intervals
         # TODO: Magic number!
         time.sleep(0.1)
 
