@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 
 
-class QueuePool:
+class BidirectionalQueue:
     __in_queue = None
     __out_queue = None
 

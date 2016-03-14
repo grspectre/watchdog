@@ -4,7 +4,7 @@
 from multiprocessing import Queue, Process
 from packages.configuration import Configuration
 from packages.networking import WatchdogTCPRequestHandler, WatchdogThreadingSocketServer, handle_queue
-from packages.queue_pool import QueuePool
+from packages.bidirectional_queue import BidirectionalQueue
 import os
 import threading
 import time
@@ -34,11 +34,11 @@ def init_worker(server_queue, worker_queue):
         pass
 
 
-def serve(configuration, queue_pool):
+def serve(configuration, bi_queue):
     while True:
-        items = queue_pool.getAll('parent')
+        items = bi_queue.getAll('parent')
         for item in items:
-            queue_pool.put('parent', item)
+            bi_queue.put('parent', item)
         # TODO: Magic number!
         time.sleep(0.1)
 
@@ -51,12 +51,10 @@ def init():
     configuration_path = os.path.join(os.path.dirname(__file__), 'config')
     configuration_name = 'watchdog'
     configuration = Configuration(configuration_path, configuration_name)
-    in_server_queue = Queue()
-    out_server_queue = Queue()
-    srv_queue_pool = QueuePool(in_server_queue, out_server_queue)
-    server_process = Process(target=init_server, args=(configuration, srv_queue_pool))
+    srv_bi_queue = BidirectionalQueue(Queue(), Queue())
+    server_process = Process(target=init_server, args=(configuration, srv_bi_queue))
     server_process.start()
-    serve(configuration, srv_queue_pool)
+    serve(configuration, srv_bi_queue)
 
 
 
