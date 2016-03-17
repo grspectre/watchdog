@@ -1,0 +1,10 @@
+{
+  "paths": [
+    {
+      "path": "/home/ant/!data",
+      "wildcards": [
+        "*.php"
+      ]
+    }
+  ]
+}

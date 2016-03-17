@@ -7,12 +7,5 @@
     "host": "localhost",
     "port": 20113
   },
-  "paths": [
-    {
-      "path": "/home/ant/!data",
-      "wildcards": [
-        "*.php"
-      ]
-    }
-  ]
+  "process_count": 0
 }
