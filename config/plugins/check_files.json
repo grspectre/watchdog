@@ -1,4 +1,12 @@
 {
+  "name": "check_files",
+  "public_methods": [
+    {
+      "name": "load",
+      "sync": true
+    }
+  ],
+  "interval": 60,
   "paths": [
     {
       "path": "/home/ant/!data",
