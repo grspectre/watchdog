@@ -5,14 +5,28 @@ from packages.configuration import Configuration
 from packages.networking import WatchdogTCPRequestHandler, WatchdogThreadingSocketServer, handle_queue
 from packages.bidirectional_queue import BidirectionalQueue
 from packages.tools import CheckInterval
+from packages.wildcard import Wildcard
 from multiprocessing import Queue, Process, cpu_count
 import os
 import threading
 import time
 
 
-def get_plugins_config():
-    pass
+def get_plugins_config(configuration_path):
+    result = {}
+    wildcard = Wildcard(["*.json"])
+    files = os.listdir(configuration_path)
+    for name in files:
+        if not wildcard.check(name):
+            continue
+        name_without_ext = name.replace(".json", "")
+        config = Configuration(configuration_path, name_without_ext)
+        result[name_without_ext] = {
+            "name": config.get("name"),
+            "public_methods": config.get("public_methods"),
+            "interval": config.get("interval")
+        }
+    return result
 
 
 def init_server(configuration, bi_queue):
@@ -36,22 +50,19 @@ def handle_worker(configuration_path, bi_queue):
     :type bi_queue: packages.bidirectional_queue.BidirectionalQueue
     :return:
     """
+    plugins = get_plugins_config(configuration_path)
     while True:
         # TODO: Magic number!
         time.sleep(0.1)
 
 
-def serve(configuration, srv_bi_queue, wrk_bi_queue):
-    check_interval = CheckInterval()
-    check_interval.add_interval(15)
-    check_interval.add_interval(30)
+def serve(configuration_path, srv_bi_queue, wrk_bi_queue):
+    plugins_configuration_path = os.path.join(configuration_path, 'plugins')
+    plugins = get_plugins_config(plugins_configuration_path)
     while True:
         items = srv_bi_queue.get_all('parent')
         for item in items:
             srv_bi_queue.put('parent', item)
-        current_intervals = check_interval.fire()
-        if len(current_intervals) > 0:
-            print current_intervals
         # TODO: Magic number!
         time.sleep(0.1)
 
@@ -78,11 +89,12 @@ def init():
         process_count = cpu_count()
 
     wrk_bi_queue = BidirectionalQueue(Queue(), Queue())
+    plugins_configuration_path = os.path.join(configuration_path, "plugins")
     for count in range(process_count):
-        wrk_process = Process(target=handle_worker, args=(configuration, wrk_bi_queue))
+        wrk_process = Process(target=handle_worker, args=(plugins_configuration_path, wrk_bi_queue))
         wrk_process.start()
 
-    serve(configuration, srv_bi_queue, wrk_bi_queue)
+    serve(configuration_path, srv_bi_queue, wrk_bi_queue)
 
 
 if __name__ == "__main__":

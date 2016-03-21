@@ -41,3 +41,6 @@ class Configuration:
             except KeyError:
                 return None
         return temp_value
+
+    def keys(self):
+        return self.__configuration
