@@ -7,5 +7,6 @@
     "host": "localhost",
     "port": 20113
   },
-  "process_count": 0
+  "process_count": 0,
+  "work_path": "data"
 }
