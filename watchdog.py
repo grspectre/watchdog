@@ -13,6 +13,11 @@ import time
 
 
 def get_plugins_config(configuration_path):
+    """
+    Get plugins config from all plugins config files
+    :type configuration_path: str
+    :return:
+    """
     result = {}
     wildcard = Wildcard(["*.json"])
     files = os.listdir(configuration_path)
@@ -24,7 +29,8 @@ def get_plugins_config(configuration_path):
         result[name_without_ext] = {
             "name": config.get("name"),
             "public_methods": config.get("public_methods"),
-            "interval": config.get("interval")
+            "interval": config.get("interval"),
+            "enable": config.get("enable")
         }
     return result
 
