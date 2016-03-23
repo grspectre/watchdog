@@ -3,31 +3,44 @@
 import SocketServer
 import threading
 import socket
-import threading
 import random
 import hashlib
 import time
 
 
-def handle_queue(server, bi_queue):
-    while True:
+def handle_queue(server, bi_queue, serve_forever):
+    """
+    Handle message from supervisor
+    :type server: WatchdogThreadingSocketServer
+    :type bi_queue: packages.bidirectional_queue.BidirectionalQueue
+    :type serve_forever: multiprocessing.Value
+    :return:
+    """
+    while serve_forever == 1:
         for unique_id in server.queued_data:
             item = server.queued_data[unique_id]
             if item["type"] == "out" and item["data"] is not None:
                 bi_queue.put('child', {
                     "id": unique_id,
-                    "data": item["data"]
+                    "data": item["data"],
+                    "type": "message"
                 })
                 server.queued_data[unique_id]["type"] = "in"
                 server.queued_data[unique_id]["data"] = None
 
         items = bi_queue.get_all('child')
         for item in items:
+            # send data to SocketServer handler
             if item["id"] in server.queued_data:
                 server.queued_data[item["id"]]["data"] = item["data"]
 
         # TODO: Magic number!
         time.sleep(0.1)
+
+    # shutdown server
+    for unique_id in server.queued_data:
+        server.queued_data[unique_id]["data"] = "stop server"
+    server.shutdown()
 
 
 class WatchdogThreadingSocketServer(SocketServer.ThreadingTCPServer):
