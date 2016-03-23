@@ -53,7 +53,15 @@ def init_server(configuration, bi_queue, serve_forever):
     server = WatchdogThreadingSocketServer((host, port), WatchdogTCPRequestHandler)
     handle_queue_thread = threading.Thread(target=handle_queue, args=(server, bi_queue, serve_forever))
     handle_queue_thread.start()
-    server.serve_forever()
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        # shutdown server
+        for unique_id in server.queued_data:
+            server.queued_data[unique_id]["data"] = "stop server"
+        server.shutdown()
 
 
 def handle_worker(configuration_path, bi_queue, serve_forever):
@@ -63,13 +71,18 @@ def handle_worker(configuration_path, bi_queue, serve_forever):
     :type serve_forever: multiprocessing.Value
     :return:
     """
-    plugins = get_plugins_config(configuration_path)
+    try:
+        plugins = get_plugins_config(configuration_path)
 
-    while serve_forever == 1:
-        item = bi_queue.get('child')
+        while serve_forever.value == 1:
+            item = bi_queue.get('child')
 
-        # TODO: Magic number!
-        time.sleep(0.1)
+            # TODO: Magic number!
+            time.sleep(0.1)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        pass
 
 
 def serve(configuration, configuration_path, srv_bi_queue, wrk_bi_queue, serve_forever):
@@ -78,14 +91,20 @@ def serve(configuration, configuration_path, srv_bi_queue, wrk_bi_queue, serve_f
 
     result = init_plugins(plugins_configuration_path, configuration.get('work_path'))
     if result is None:
-        serve_forever = 0
+        serve_forever.value = 0
 
-    while serve_forever == 1:
-        items = srv_bi_queue.get_all('parent')
-        for item in items:
-            srv_bi_queue.put('parent', item)
-        # TODO: Magic number!
-        time.sleep(0.1)
+    try:
+        while serve_forever.value == 1:
+            items = srv_bi_queue.get_all('parent')
+            for item in items:
+                srv_bi_queue.put('parent', item)
+            # TODO: Magic number!
+            time.sleep(0.1)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        pass
+
 
 
 def init():

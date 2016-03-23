@@ -16,7 +16,7 @@ def handle_queue(server, bi_queue, serve_forever):
     :type serve_forever: multiprocessing.Value
     :return:
     """
-    while serve_forever == 1:
+    while serve_forever.value == 1:
         for unique_id in server.queued_data:
             item = server.queued_data[unique_id]
             if item["type"] == "out" and item["data"] is not None:
@@ -36,7 +36,6 @@ def handle_queue(server, bi_queue, serve_forever):
 
         # TODO: Magic number!
         time.sleep(0.1)
-
     # shutdown server
     for unique_id in server.queued_data:
         server.queued_data[unique_id]["data"] = "stop server"
