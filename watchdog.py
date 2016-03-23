@@ -35,6 +35,12 @@ def get_plugins_config(configuration_path):
 
 
 def init_plugins(configuration_path, work_path):
+    """
+    Init plugins workaround
+    :type configuration_path: str
+    :type work_path: str
+    :return:
+    """
     plugins_config_data = get_plugins_config(configuration_path)
     print plugins_config_data
     return None
@@ -86,7 +92,15 @@ def handle_worker(configuration_path, bi_queue, serve_forever):
 
 
 def serve(configuration, configuration_path, srv_bi_queue, wrk_bi_queue, serve_forever):
-
+    """
+    Main loop
+    :type configuration: packages.configuration.Configuration
+    :type configuration_path: str
+    :type srv_bi_queue: packages.bidirectional_queue.BidirectionalQueue
+    :type wrk_bi_queue: packages.bidirectional_queue.BidirectionalQueue
+    :type serve_forever: multiprocessing.Value
+    :return:
+    """
     plugins_configuration_path = os.path.join(configuration_path, 'plugins')
 
     result = init_plugins(plugins_configuration_path, configuration.get('work_path'))
