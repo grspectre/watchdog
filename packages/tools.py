@@ -1,6 +1,9 @@
 #! -*- coding: utf8 -*-
+from packages.wildcard import Wildcard
+from packages.configuration import Configuration
 import time
 import math
+import os
 
 
 class CheckInterval:
@@ -43,3 +46,38 @@ class CheckInterval:
                 self.__intervals[interval] = how_many_times
                 result.append(int_interval)
         return result
+
+
+def get_plugins_config(configuration_path):
+    """
+    Get plugins config from all plugins config files
+    :type configuration_path: str
+    :return:
+    """
+    result = {}
+    wildcard = Wildcard(["*.json"])
+    files = os.listdir(configuration_path)
+    for name in files:
+        if not wildcard.check(name):
+            continue
+        name_without_ext = name.replace(".json", "")
+        config = Configuration(configuration_path, name_without_ext)
+        config_keys = config.keys()
+        result[name_without_ext] = {}
+        for key in config_keys:
+            result[name_without_ext][key] = config.get(key)
+
+    return result
+
+
+def init_plugins(configuration_path, work_path):
+    """
+    Init plugins workaround
+    :type configuration_path: str
+    :type work_path: str
+    :return:
+    """
+    plugins_config_data = get_plugins_config(configuration_path)
+    for plugin in plugins_config_data:
+        conf = plugins_config_data[plugin]
+    return None

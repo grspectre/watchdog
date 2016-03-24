@@ -4,46 +4,11 @@
 from packages.configuration import Configuration
 from packages.networking import WatchdogTCPRequestHandler, WatchdogThreadingSocketServer, handle_queue
 from packages.bidirectional_queue import BidirectionalQueue
-from packages.tools import CheckInterval
-from packages.wildcard import Wildcard
+from packages.tools import CheckInterval, init_plugins, get_plugins_config
 from multiprocessing import Queue, Process, Value, cpu_count
 import os
 import threading
 import time
-
-
-def get_plugins_config(configuration_path):
-    """
-    Get plugins config from all plugins config files
-    :type configuration_path: str
-    :return:
-    """
-    result = {}
-    wildcard = Wildcard(["*.json"])
-    files = os.listdir(configuration_path)
-    for name in files:
-        if not wildcard.check(name):
-            continue
-        name_without_ext = name.replace(".json", "")
-        config = Configuration(configuration_path, name_without_ext)
-        config_keys = config.keys()
-        result[name_without_ext] = {}
-        for key in config_keys:
-            result[name_without_ext][key] = config.get(key)
-
-    return result
-
-
-def init_plugins(configuration_path, work_path):
-    """
-    Init plugins workaround
-    :type configuration_path: str
-    :type work_path: str
-    :return:
-    """
-    plugins_config_data = get_plugins_config(configuration_path)
-    print plugins_config_data
-    return None
 
 
 def init_server(configuration, bi_queue, serve_forever):
