@@ -81,3 +81,11 @@ def init_plugins(configuration_path, work_path):
     for plugin in plugins_config_data:
         conf = plugins_config_data[plugin]
     return None
+
+
+def prepare_work_path(work_path):
+    abs_path = os.path.abspath(work_path)
+    if os.path.isdir(abs_path):
+        return abs_path
+    else:
+        raise RuntimeError("Work directory is not exists")

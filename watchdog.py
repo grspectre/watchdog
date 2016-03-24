@@ -4,7 +4,7 @@
 from packages.configuration import Configuration
 from packages.networking import WatchdogTCPRequestHandler, WatchdogThreadingSocketServer, handle_queue
 from packages.bidirectional_queue import BidirectionalQueue
-from packages.tools import CheckInterval, init_plugins, get_plugins_config
+from packages.tools import CheckInterval, init_plugins, get_plugins_config, prepare_work_path
 from multiprocessing import Queue, Process, Value, cpu_count
 import os
 import threading
@@ -68,7 +68,8 @@ def serve(configuration, configuration_path, srv_bi_queue, wrk_bi_queue, serve_f
     """
     plugins_configuration_path = os.path.join(configuration_path, 'plugins')
 
-    result = init_plugins(plugins_configuration_path, configuration.get('work_path'))
+    work_path = prepare_work_path(configuration.get('work_path'))
+    result = init_plugins(plugins_configuration_path, work_path)
     if result is None:
         serve_forever.value = 0
 
