@@ -3,4 +3,6 @@ from base_plugin import BasePlugin
 
 
 class Echo(BasePlugin):
-    pass
+
+    def echo(self):
+        pass

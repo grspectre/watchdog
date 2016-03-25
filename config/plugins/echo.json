@@ -2,8 +2,7 @@
   "name": "echo",
   "public_methods": [
     {
-      "name": "echo",
-      "sync": true
+      "name": "echo"
     }
   ],
   "enable": true
