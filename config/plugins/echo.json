@@ -1,0 +1,10 @@
+{
+  "name": "echo",
+  "public_methods": [
+    {
+      "name": "echo",
+      "sync": true
+    }
+  ],
+  "enable": true
+}
