@@ -35,16 +35,14 @@ def init_server(configuration, bi_queue, serve_forever):
         server.shutdown()
 
 
-def handle_worker(configuration_path, bi_queue, serve_forever):
+def handle_worker(plugins_conf, bi_queue, serve_forever):
     """
-    :type configuration_path: str
+    :type plugins_conf: list
     :type bi_queue: packages.bidirectional_queue.BidirectionalQueue
     :type serve_forever: multiprocessing.Value
     :return:
     """
     try:
-        plugins = get_plugins_config(configuration_path)
-
         while serve_forever.value == 1:
             item = bi_queue.get('child')
 
@@ -56,7 +54,7 @@ def handle_worker(configuration_path, bi_queue, serve_forever):
         pass
 
 
-def serve(configuration, configuration_path, srv_bi_queue, wrk_bi_queue, serve_forever):
+def serve(srv_bi_queue, wrk_bi_queue, serve_forever):
     """
     Main loop
     :type configuration: packages.configuration.Configuration
@@ -66,13 +64,6 @@ def serve(configuration, configuration_path, srv_bi_queue, wrk_bi_queue, serve_f
     :type serve_forever: multiprocessing.Value
     :return:
     """
-    plugins_configuration_path = os.path.join(configuration_path, 'plugins')
-
-    work_path = prepare_work_path(configuration.get('work_path'))
-    result = init_plugins(plugins_configuration_path, work_path)
-    if result is None:
-        serve_forever.value = 0
-
     try:
         while serve_forever.value == 1:
             items = srv_bi_queue.get_all('parent')
@@ -95,6 +86,13 @@ def init():
     configuration_name = 'watchdog'
     configuration = Configuration(configuration_path, configuration_name)
 
+    plugins_configuration_path = os.path.join(configuration_path, 'plugins')
+
+    work_path = prepare_work_path(configuration.get('work_path'))
+    plugins_conf = init_plugins(plugins_configuration_path, work_path)
+    if plugins_conf is None:
+        return
+
     serve_forever = Value('i', 1)
 
     srv_bi_queue = BidirectionalQueue(Queue(), Queue())
@@ -110,13 +108,12 @@ def init():
         process_count = cpu_count()
 
     wrk_bi_queue = BidirectionalQueue(Queue(), Queue())
-    plugins_configuration_path = os.path.join(configuration_path, "plugins")
     wrk_processes = []
     for count in range(process_count):
-        wrk_process = Process(target=handle_worker, args=(plugins_configuration_path, wrk_bi_queue, serve_forever))
+        wrk_process = Process(target=handle_worker, args=(plugins_conf, wrk_bi_queue, serve_forever))
         wrk_process.start()
 
-    serve(configuration, configuration_path, srv_bi_queue, wrk_bi_queue, serve_forever)
+    serve(srv_bi_queue, wrk_bi_queue, serve_forever)
 
     # shutdown
     server_process.join()
