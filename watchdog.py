@@ -86,7 +86,6 @@ def serve(configuration, configuration_path, srv_bi_queue, wrk_bi_queue, serve_f
         pass
 
 
-
 def init():
     """
     Init watchdog server

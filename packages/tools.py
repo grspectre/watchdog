@@ -78,9 +78,29 @@ def init_plugins(configuration_path, work_path):
     :return:
     """
     plugins_config_data = get_plugins_config(configuration_path)
+    result = []
     for plugin in plugins_config_data:
         conf = plugins_config_data[plugin]
-    return None
+        if conf['enable'] is not True:
+            continue
+        name = conf['name']
+        work_dir = os.path.join(work_path, name)
+        if not os.path.exists(work_dir):
+            os.mkdir(work_dir)
+        status_file = os.path.join(work_dir, "status")
+        if os.path.exists(status_file):
+            status = open(status_file, 'rb').read()
+        else:
+            status = "work"
+            open(status_file, 'wb').write(status)
+        if status == 'broken':
+            raise RuntimeError("Plugin '%s' was broken. Read log for details." % (name,))
+        conf['work_dir'] = work_dir
+        result.append(conf)
+    if len(result) == 0:
+        return None
+    else:
+        return result
 
 
 def prepare_work_path(work_path):
