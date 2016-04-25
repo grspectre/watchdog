@@ -4,6 +4,7 @@
 from packages.configuration import Configuration
 from packages.networking import WatchdogTCPRequestHandler, WatchdogThreadingSocketServer, handle_queue
 from packages.bidirectional_queue import BidirectionalQueue
+from packages.interpreter import Interpreter
 from packages.tools import CheckInterval, init_plugins, get_plugins_config, prepare_work_path
 from multiprocessing import Queue, Process, Value, cpu_count
 import os
@@ -31,7 +32,9 @@ def init_server(configuration, bi_queue, serve_forever):
     finally:
         # shutdown server
         for unique_id in server.queued_data:
-            server.queued_data[unique_id]["data"] = "stop server"
+            # FIXME: Don't worked!
+            pass
+#            bi_queue.put('parent', )
         server.shutdown()
 
 
@@ -42,9 +45,15 @@ def handle_worker(plugins_conf, bi_queue, serve_forever):
     :type serve_forever: multiprocessing.Value
     :return:
     """
+    interpeter = Interpreter(plugins_conf)
     try:
         while serve_forever.value == 1:
             item = bi_queue.get('child')
+            if item is None:
+                # TODO: Magic number!
+                time.sleep(0.1)
+                continue
+            interpeter.process(item['data'])
 
             # TODO: Magic number!
             time.sleep(0.1)
@@ -68,7 +77,7 @@ def serve(srv_bi_queue, wrk_bi_queue, serve_forever):
         while serve_forever.value == 1:
             items = srv_bi_queue.get_all('parent')
             for item in items:
-                srv_bi_queue.put('parent', item)
+                wrk_bi_queue.put('parent', item)
             # TODO: Magic number!
             time.sleep(0.1)
     except KeyboardInterrupt:

@@ -17,7 +17,7 @@ def init():
     host = configuration.get("console::host")
     port = configuration.get("console::port")
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    data = "some data"
+    data = "list"
 
     try:
         # Connect to server and send data
